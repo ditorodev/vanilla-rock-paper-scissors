@@ -7,6 +7,9 @@ const CHARACTERS = {
   },
   'Roboty': {
     avatar: '🤖'
+  },
+  'Roboty2': {
+    avatar: '👾'
   }
 };
 
@@ -44,10 +47,10 @@ function modelFactory(initialState, element) {
     // set a new State, and update the dom element manually once the state is changed
     setState(newState, cb) {
       // Merge both new and old state to replace whats new an keep whats old.
-      this.state = {...initialState, ...newState};
+      this.state = {...this.state, ...newState};
 
       // re-render the element with a given renderer callback
-      cb(this.state, this.element);
+      if (cb) cb(this.state, this.element);
     }
   }
 }
@@ -87,7 +90,7 @@ function DOM_fillPlayer(state, element) {
 
 }
 
-function DOM_selectionScreen(show) {
+function DOM_selectionScreen(show, choices, title) {
   const wrapper = document.querySelector('.player-selection');
 
   if (!show && !wrapper.classList.contains('hide')) {
@@ -114,8 +117,14 @@ function DOM_selectionScreen(show) {
   wrapper.classList.remove('hide');
 
   const elementsWrapper = document.querySelector('.player-selection__characters');
-  const itemElements = Object.keys(ITEMS).map(function (key) {
-    const item = {...ITEMS[key], name: key};
+  // clean elements wrapper beforehand
+  elementsWrapper.innerHTML = null;
+
+  const selectionTitle = document.querySelector('.player-selection__title');
+  selectionTitle.textContent = 'Select ' + (title || 'an Item') + ':';
+
+  const itemElements = Object.keys(choices).map(function (key) {
+    const item = {...choices[key], name: key};
     return renderItem(item);
   });
 
@@ -133,63 +142,105 @@ function DOM_announceWinner(winner) {
 }
 
 function init() {
-  const spinner = document.querySelector('.loading-spinner');
-  spinner.classList.add('hide');
-
   function computerPlays() {
     const number = Math.floor(Math.random() * (Object.keys(ITEMS).length));
     return {...ITEMS[Object.keys(ITEMS)[number]], name: Object.keys(ITEMS)[number]};
   }
 
-  const PLAYER1 = modelFactory(null, document.querySelector('.main__player--1'));
-  const PLAYER2 = modelFactory(playerFactory('Rival Computer', 'Roboty'), document.querySelector('.main__player--2'));
+  function startGame(PLAYER1, PLAYER2) {
+    // Render the selection screen
+    if (PLAYER1.state.character.name !== 'Roboty') {
+      DOM_selectionScreen(true, ITEMS, 'your choice');
 
-  // Render the selection screen
-  DOM_selectionScreen(true);
+      // Once one character is clicked we set the Player1 item
+      document.querySelectorAll('.character').forEach(function (element) {
+        element.addEventListener('click', function () {
+          console.log('from choice: ', PLAYER1)
+          PLAYER1.setState({
+            choice: {...ITEMS[element.querySelector('p').textContent], name: element.querySelector('p').textContent}
+          }, function (state) {
 
-  // Once one character is clicked we set the Player1 character
-  document.querySelectorAll('.character').forEach(function (element) {
-    element.addEventListener('click', function () {
+            // Hide the Selection screen
+            DOM_selectionScreen(false);
+            element.removeEventListener('click', this);
+          })
+        })
+      });
+    } else {
+      // computers plays as roboty is a bot
       PLAYER1.setState({
-        character: CHARACTERS[Object.keys(CHARACTERS)[Math.floor(Object.keys(CHARACTERS).length * Math.random())]],
-        choice: {...ITEMS[element.querySelector('p').textContent], name: element.querySelector('p').textContent}
-      }, function (state) {
-        console.log(state);
+        choice: computerPlays()
+      });
+    }
 
-        // Hide the Selection screen
-        DOM_selectionScreen(false);
+    document.querySelector('.main').classList.remove('hide');
 
-        document.querySelector('.main').classList.remove('hide');
+    // Show the player 1
+    DOM_fillPlayer(PLAYER1.state, PLAYER1.element);
 
-        // Show the player 1
-        DOM_fillPlayer(PLAYER1.state, PLAYER1.element);
+    // the robot plays
+    PLAYER2.setState({
+      choice: computerPlays()
+    }, function (state, element) {
+      console.log('compute playing', state);
+      element.classList.remove('hide');
+      // Show the player 2
+      DOM_fillPlayer(state, element);
+    });
 
-        // the robot plays
-        PLAYER2.setState({
-          choice: computerPlays()
-        }, function (state, element) {
-          console.log('compute playing', state);
-          element.classList.remove('hide');
-          // Show the player 2
-          DOM_fillPlayer(state, element);
+    //evaluate who won
+    switch (judgeWinner(PLAYER1.state.choice, PLAYER2.state.choice)) {
+      case gameWinner.DRAW:
+        DOM_announceWinner('No');
+        break;
+
+      case gameWinner.PLAYER1:
+        DOM_announceWinner(PLAYER1.state.character.avatar);
+        break;
+
+      case gameWinner.PLAYER2:
+        DOM_announceWinner(PLAYER2.state.character.avatar);
+        break;
+    }
+
+  }
+
+  function selectCharacter(player) {
+    const {Roboty2, ...characters} = CHARACTERS;
+
+    DOM_selectionScreen(true, characters, 'your character');
+    return new Promise(function (resolve, reject) {
+        document.querySelectorAll('.character').forEach(function (element) {
+          element.addEventListener('click', function () {
+            console.log(element.querySelector('p').textContent);
+            player.setState({
+              character: {
+                ...CHARACTERS[element.querySelector('p').textContent],
+                name: element.querySelector('p').textContent
+              },
+            }, function (state) {
+              DOM_selectionScreen(false);
+              resolve();
+            });
+          });
         });
+      }
+    );
 
-        //evaluate who won
-        switch (judgeWinner(PLAYER1.state.choice, PLAYER2.state.choice)) {
-          case gameWinner.DRAW:
-            DOM_announceWinner('No');
-            break;
+  }
 
-          case gameWinner.PLAYER1:
-            DOM_announceWinner(PLAYER1.state.character.avatar);
-            break;
+  const spinner = document.querySelector('.loading-spinner');
+  spinner.classList.add('hide');
 
-          case gameWinner.PLAYER2:
-            DOM_announceWinner(PLAYER2.state.character.avatar);
-            break;
-        }
-      })
-    })
+
+  const PLAYER1 = modelFactory(null, document.querySelector('.main__player--1'));
+  const PLAYER2 = modelFactory(playerFactory('Rival Computer', 'Roboty2'), document.querySelector('.main__player--2'));
+
+  // Select mode
+  selectCharacter(PLAYER1).then(function () {
+    console.log(PLAYER1);
+    // init game with current config
+    startGame(PLAYER1, PLAYER2);
   });
 
 }
@@ -200,8 +251,7 @@ window.document.onreadystatechange = function () {
 
     document.querySelector('.play-again').addEventListener('click', function() {
       window.location.reload()
+      // init();
     })
   }
 };
-
-

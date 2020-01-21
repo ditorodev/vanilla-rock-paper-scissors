@@ -183,7 +183,6 @@ h1 {
 .announcement {
     position: absolute;
     top: 45%;
-    /*height: 10%;*/
     width: calc(75vw - 40px);
     margin: 0 5vw;
     padding: 20px;
