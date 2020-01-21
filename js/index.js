@@ -148,61 +148,66 @@ function init() {
   }
 
   function startGame(PLAYER1, PLAYER2) {
-    // Render the selection screen
-    if (PLAYER1.state.character.name !== 'Roboty') {
-      DOM_selectionScreen(true, ITEMS, 'your choice');
+    function player1Chooses() {
+      return new Promise(function (resolve, reject) {
+        // Render the selection screen
+        if (PLAYER1.state.character.name !== 'Roboty') {
+          DOM_selectionScreen(true, ITEMS, 'your choice');
 
-      // Once one character is clicked we set the Player1 item
-      document.querySelectorAll('.character').forEach(function (element) {
-        element.addEventListener('click', function () {
-          console.log('from choice: ', PLAYER1)
+          // Once one character is clicked we set the Player1 item
+          document.querySelectorAll('.character').forEach(function (element) {
+            element.addEventListener('click', function () {
+              console.log('from choice: ', PLAYER1)
+              PLAYER1.setState({
+                choice: {...ITEMS[element.querySelector('p').textContent], name: element.querySelector('p').textContent}
+              }, function (state) {
+
+                // Hide the Selection screen
+                DOM_selectionScreen(false);
+                resolve();
+                element.removeEventListener('click', this);
+              })
+            })
+          });
+        } else {
+          // computers plays as roboty is a bot
           PLAYER1.setState({
-            choice: {...ITEMS[element.querySelector('p').textContent], name: element.querySelector('p').textContent}
-          }, function (state) {
+            choice: computerPlays()
+          });
+          resolve();
+        }
+      })
+    }
 
-            // Hide the Selection screen
-            DOM_selectionScreen(false);
-            element.removeEventListener('click', this);
-          })
-        })
-      });
-    } else {
-      // computers plays as roboty is a bot
-      PLAYER1.setState({
+    player1Chooses().then(function () {
+      document.querySelector('.main').classList.remove('hide');
+      // renders the player 1
+      DOM_fillPlayer(PLAYER1.state, PLAYER1.element);
+
+      // the robot plays
+      PLAYER2.setState({
         choice: computerPlays()
+      }, function (state, element) {
+        element.classList.remove('hide');
+        // Show the player 2
+        DOM_fillPlayer(state, element);
       });
-    }
 
-    document.querySelector('.main').classList.remove('hide');
+      //evaluate who won
+      switch (judgeWinner(PLAYER1.state.choice, PLAYER2.state.choice)) {
+        case gameWinner.DRAW:
+          DOM_announceWinner('No');
+          break;
 
-    // Show the player 1
-    DOM_fillPlayer(PLAYER1.state, PLAYER1.element);
+        case gameWinner.PLAYER1:
+          DOM_announceWinner(PLAYER1.state.character.avatar);
+          break;
 
-    // the robot plays
-    PLAYER2.setState({
-      choice: computerPlays()
-    }, function (state, element) {
-      console.log('compute playing', state);
-      element.classList.remove('hide');
-      // Show the player 2
-      DOM_fillPlayer(state, element);
+        case gameWinner.PLAYER2:
+          DOM_announceWinner(PLAYER2.state.character.avatar);
+          break;
+      }
     });
-
-    //evaluate who won
-    switch (judgeWinner(PLAYER1.state.choice, PLAYER2.state.choice)) {
-      case gameWinner.DRAW:
-        DOM_announceWinner('No');
-        break;
-
-      case gameWinner.PLAYER1:
-        DOM_announceWinner(PLAYER1.state.character.avatar);
-        break;
-
-      case gameWinner.PLAYER2:
-        DOM_announceWinner(PLAYER2.state.character.avatar);
-        break;
-    }
-
   }
 
   function selectCharacter(player) {
@@ -212,7 +217,6 @@ function init() {
     return new Promise(function (resolve, reject) {
         document.querySelectorAll('.character').forEach(function (element) {
           element.addEventListener('click', function () {
-            console.log(element.querySelector('p').textContent);
             player.setState({
               character: {
                 ...CHARACTERS[element.querySelector('p').textContent],
