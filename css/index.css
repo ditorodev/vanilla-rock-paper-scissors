@@ -37,38 +37,6 @@ h1 {
     padding: var(--base-size);
 }
 
-.menu-trigger{
-    border-radius: 1000px;
-    background-color: var(--white);
-    position: absolute;
-    right: var(--base-size);
-    top: var(--base-size);
-    padding: calc(var(--base-size) * .5);
-    max-width: var(--base-size);
-    max-height: var(--base-size);
-    border: 2px solid var(--black);
-    cursor: pointer;
-    font-weight: bold;
-    overflow: hidden;
-    white-space: nowrap;
-    transition: all 150ms ease-in-out;
-}
-
-.menu-trigger:hover {
-    max-width: 200px;
-    color: var(--white);
-    background-color: var(--black);
-}
-
-.menu-trigger span {
-    opacity: 0;
-    transition: opacity 155ms ease-in-out;
-}
-
-.menu-trigger:hover span{
-    opacity: 1;
-}
-
 .app-title {
     max-width: 260px;
     flex: 1;
