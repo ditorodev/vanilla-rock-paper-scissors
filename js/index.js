@@ -251,11 +251,12 @@ function init() {
 
 window.document.onreadystatechange = function () {
   if (document.readyState === "complete") {
-    init();
+    setTimeout(function() {
+      init()
+    }, 500); // just to show the cool loader :)
 
     document.querySelector('.play-again').addEventListener('click', function() {
-      window.location.reload()
-      // init();
+      window.location.reload();
     })
   }
 };
