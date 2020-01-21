@@ -116,7 +116,7 @@ h1 {
     font-size: var(--base-size);
 }
 
-.game-starter {
+.btn {
     background-color: var(--accent);
     color: var(--white);
     padding: calc(var(--base-size) * .5);
@@ -124,4 +124,108 @@ h1 {
     border-radius: 10px;
     border: none;
     outline: none;
+}
+
+.loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 4;
+}
+
+.loading-spinner:before {
+    content: "📄";
+    font-size: var(--text-size-1);
+    animation: changeLetter 1s linear infinite;
+}
+
+.player-selection {
+    display: flex;
+    flex-direction: column;
+    flex: 4;
+    justify-content: center;
+}
+
+.player-selection__name{
+    text-align: center;
+    font-size: var(--text-size-2);
+    font-weight: 500;
+}
+
+.player-selection__characters {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.player-selection__characters .character {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 2px solid var(--black);
+    padding: 5px;
+}
+
+.player-selection__characters .character.selected {
+    color: var(--white);
+    background-color: var(--black);
+    font-weight: bold;
+}
+
+.player-selection__characters .character p {
+    font-size: calc(var(--base-size) * .7);
+}
+
+.announcement {
+    position: absolute;
+    top: 45%;
+    /*height: 10%;*/
+    width: calc(75vw - 40px);
+    margin: 0 5vw;
+    padding: 20px;
+    font-weight: var(--base-size);
+    border-radius: 10px;
+    background-color: var(--black);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.announcement p {
+    margin-bottom: var(--base-size);
+}
+
+/* HELPER CLASSES */
+.hide {
+    opacity: 0;
+    display: none;
+}
+
+/* ANIMATIONS */
+
+@keyframes changeLetter {
+    0% {
+        content: "📄";
+    }
+    20% {
+        content: "🗿️";
+    }
+    40% {
+        content: "✂️";
+    }
+    60% {
+        content: "📄";
+    }
+    80% {
+        content: "🗿️";
+    }
+    100% {
+        content: "✂️";
+    }
 }
